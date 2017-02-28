@@ -71,7 +71,7 @@ module ActionDispatch
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
             sid = generate_sid
-            session = @@session_class.new(:session_id => sid, :data => {})
+            session = @@session_class.new(@@session_class.session_id_column_name.to_sym => sid, :data => {})
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
@@ -110,7 +110,7 @@ module ActionDispatch
             new_sid = generate_sid
 
             if options[:renew]
-              new_model = @@session_class.new(:session_id => new_sid, :data => data)
+              new_model = @@session_class.new(@@session_class.session_id_column_name.to_sym => new_sid, :data => data)
               new_model.save
               request.env[SESSION_RECORD_KEY] = new_model
             end
@@ -124,7 +124,7 @@ module ActionDispatch
           model = @@session_class.find_by_session_id(id)
           if !model
             id = generate_sid
-            model = @@session_class.new(:session_id => id, :data => {})
+            model = @@session_class.new(@@session_class.session_id_column_name.to_sym => id, :data => {})
             model.save
           end
           if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?

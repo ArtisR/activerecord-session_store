@@ -14,6 +14,9 @@ module ActiveRecord
       cattr_accessor :data_column_name
       self.data_column_name = 'data'
 
+      cattr_accessor :session_id_column_name
+      self.session_id_column_name = 'session_id'
+
       before_save :serialize_data!
       before_save :raise_on_session_data_overflow!
 
@@ -37,7 +40,7 @@ module ActiveRecord
 
         private
           def session_id_column
-            'session_id'
+            @@session_id_column_name.to_s
           end
 
           # Compatibility with tables using sessid instead of session_id.
@@ -55,7 +58,7 @@ module ActiveRecord
               class << self; remove_possible_method :find_by_session_id; end
 
               def self.find_by_session_id(session_id)
-                where(session_id: session_id).first
+                where.not(@@session_id_column_name.to_sym => nil).where(@@session_id_column_name.to_sym => session_id).first
               end
             end
           end
@@ -63,12 +66,17 @@ module ActiveRecord
 
       def initialize(*)
         @data = nil
+        @session_id = nil
         super
       end
 
       # Lazy-deserialize session state.
       def data
         @data ||= self.class.deserialize(read_attribute(@@data_column_name)) || {}
+      end
+
+      def session_id
+        @session_id ||= read_attribute(@@session_id_column_name) || nil
       end
 
       attr_writer :data
